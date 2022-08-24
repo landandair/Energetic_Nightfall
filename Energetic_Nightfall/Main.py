@@ -7,15 +7,16 @@ SIZE = (1280, 720)
 def main():
     ip = "10.0.0.144"
     port = 7135
-    print('here we go')
     pg.init()
     pg.font.init()
     screen = pg.display.set_mode(SIZE)
     pg.display.set_caption('Energetic Nightfall')
 
     # Connect to server and create controlled ship with id
+    print(f'connecting to {ip}')
     network = Network(ip, port)
     id = network.p
+    print('connected')
     player_data = KeyData(id)
     print('Player Number: ' + str(id))
     player_data.ships_pos[id] = network.start[id]
