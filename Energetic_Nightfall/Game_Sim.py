@@ -165,7 +165,7 @@ class BasicMissile(pg.sprite.Sprite):
     def update(self):
         self.target = self.launcher.target_pos
         self.ref = self.launcher.pos
-        self.vel += np.array((np.cos(self.theta), -np.sin(self.theta)))*.025
+        self.vel += np.array((np.cos(self.theta), -np.sin(self.theta)))*.015
         self.pos += self.vel
         self.rect.center = self.pos
         self.theta = self.get_heading()
