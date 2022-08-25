@@ -15,13 +15,13 @@ def main():
     # Connect to server and create controlled ship with id
     print(f'connecting to {ip}')
     network = Network(ip, port)
-    id = network.p
+    player_id = network.p
     print('connected')
-    player_data = KeyData(id)
-    print('Player Number: ' + str(id))
-    player_data.ships_pos[id] = network.start[id]
+    player_data = KeyData(player_id)
+    print('Player Number: ' + str(player_id))
+    player_data.ships_pos[player_id] = network.start[player_id]
     player_data = network.send(player_data)
-    ship = Game.Ship(id, player_data.ships_pos[id], is_controllable=True)
+    ship = Game.Ship(player_id, player_data.ships_pos[player_id], is_controllable=True)
     # except:
     #     network = False
     #     ship = Game.Ship(0, np.array((100, 100)), False, is_controllable=True)
@@ -29,7 +29,7 @@ def main():
     ships = [ship]
     print(player_data.ships_pos)
     for ship in player_data.ships_pos.keys():
-        if ship != id and player_data.ships_pos[ship][3] > 0:
+        if ship != player_id and player_data.ships_pos[ship][3] > 0:
             ship = Game.Ship(ship, player_data.ships_pos[ship], is_controllable=False)
             ships.append(ship)
     game_loop = Game.Game(screen, network, player_data, ships)
