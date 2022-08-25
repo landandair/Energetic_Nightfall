@@ -5,7 +5,7 @@ from Networking import KeyData, Network
 SIZE = (1280, 720)
 
 def main():
-    ip = "10.0.0.144"
+    ip = "10.4.138.145"
     port = 7135
     pg.init()
     pg.font.init()
@@ -21,12 +21,12 @@ def main():
     print('Player Number: ' + str(player_id))
     player_data.ships_pos[player_id] = network.start[player_id]
     player_data = network.send(player_data)
-    ship = Game.Ship(player_id, player_data.ships_pos[player_id], is_controllable=True)
+    player_ship = Game.Ship(player_id, player_data.ships_pos[player_id], is_controllable=True)
     # except:
     #     network = False
     #     ship = Game.Ship(0, np.array((100, 100)), False, is_controllable=True)
     # Make initial ship
-    ships = [ship]
+    ships = [player_ship]
     print(player_data.ships_pos)
     for ship in player_data.ships_pos.keys():
         if ship != player_id and player_data.ships_pos[ship][3] > 0:

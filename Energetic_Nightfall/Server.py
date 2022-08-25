@@ -14,7 +14,7 @@ def main():
     - Copy the address into the server field shown below
     - Change the port number if desired and run the script"""
     # Put server and com port here
-    server = "10.0.0.144"
+    server = "10.4.138.145"
     port = 7135
     debug = True
     # set the communication protocol
@@ -90,7 +90,7 @@ def threaded_client(conn, player):
             data = conn.recv(5 * 2048)
             if not data:
                 print(f"Player {player} Disconnected")
-                Server_data.ships_pos[player][3] = 0  # Kills disconnected ship for all clients by setting health to 0
+                #Server_data.ships_pos[player][3] = 0  # Kills disconnected ship for all clients by setting health to 0
                 break
             data = pickle.loads(data)
 
@@ -110,8 +110,8 @@ def threaded_client(conn, player):
             print(e)
             break
     time.sleep(5)
-    Server_data.wep_mail.pop(player)
-    Server_data.ships_pos.pop(player)  # Removes disconnected player from memory
+    #Server_data.wep_mail.pop(player)
+    #Server_data.ships_pos.pop(player)  # Removes disconnected player from memory
     print(f"Lost connection to player:{player}")
     conn.close()
 

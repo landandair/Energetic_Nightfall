@@ -1,11 +1,11 @@
-import pygame
+import time
 import pygame as pg
 import Pygame_Tools as Tool
 import numpy as np
 import sys
 SIM_SPEED = 60
 
-
+# Player Ships/Weapons~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class Ship(pg.sprite.Sprite):
     """Main Player and enemy controlled ship
     Needs ability to
@@ -95,12 +95,11 @@ class Ship(pg.sprite.Sprite):
 
     def get_target(self, keys):
         if keys[pg.K_t]:
-            self.target = np.array(pg.mouse.get_pos())
+            self.target = pg.mouse.get_pos()
         try:
             self.target_pos = self.target.pos
         except AttributeError:
             self.target_pos = self.target
-
 
     def point_retrograde(self):
         """Buggy control system needs some help"""
@@ -139,31 +138,67 @@ class Ship(pg.sprite.Sprite):
             self.image = self.image_list[self.state]
             Tool.rot(self)
 
-
     def up_data(self, player_data):
         player_data.ships_pos[self.id] = [self.pos, self.vel, self.theta, self.health, self.state, True]
 
 
+class BasicMissle(pg.sprite.Sprite):
+    def __init__(self, launcher: Ship):
+        super().__init__()
+        self.og_image = pg.image.load('Assets/Ship/ShipRed.png')
+        self.image = self.og_image  # Set initial image
+        self.rect = self.image.get_rect()
+        # Combat Variables
+        self.launcher = launcher
+        self.target = launcher.target_pos
+        self.ref = launcher.pos
+        # Movement Requirements
+        self.vel = np.array(launcher.vel)
+        self.pos = np.array(launcher.pos)
+        self.rect.center = self.pos  # Set position
+        self.theta = self.get_heading()
+        Tool.rot(self)
+
+    def get_heading(self):
+        return np.arctan2((self.target[0]-self.pos[0]), (self.target[1]-self.pos[1]))
+
+    def update(self):
+        self.target = self.launcher.target_pos
+        self.ref = self.launcher.pos
+        self.pos += self.vel
+        self.rect.center = self.pos
+        self.theta = self.get_heading()
+        self.vel += np.array(np.cos(self.theta) * .1, np.sin(self.theta)*.1)
+        Tool.rot(self)
+
+
+# Fire Control~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class WepRack:
-    def __init__(self, ship):
+    def __init__(self, ship: Ship, ship_dict: dict, key_dat: Tool.KeyData, weapons: pg.sprite.Group):
         self.ship = ship
+        self.key_dat = key_dat
+        self.ship_dict = ship_dict
+        self.wep_group = weapons
+        self.wep_dict = {'basic': BasicMissle}
+        self.cool_down = time.time()
 
     def update(self):
         keys = pg.key.get_pressed()
+        if keys[pg.K_e] and (time.time() - self.cool_down) > 2:
+            self.wep_group.add(BasicMissle(self.ship))
+            self.cool_down = time.time()
 
 
-    def new_weapons(self, new_weapons: list):
+    def new_weapons(self):
         """inputs:
-            - [[type <str>, pos <vector>, vel <vector>, target <vetor> or id <int>]]
+            - [[type <str>, origin id <int>}]
         Outputs
             - list of weapon sprites"""
-        for name, pos, vel, target in new_weapons:
-            print(name)
-        return new_weapons
+        for name, origin in self.key_dat.new_weapons:
+            self.wep_dict[name](self.ship_dict[origin])
 
 
-
-
+# Main Game Loop~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class Game:
     def __init__(self, screen, network, key_dat, ships, planets=()):
         self.tics = SIM_SPEED
@@ -177,11 +212,17 @@ class Game:
         self.background.add(back)
         self.planets = pg.sprite.Group()
         self.planets.add(planets)
-        # Item Groups
+        self.weapons = pg.sprite.Group()
+        # Player ship
         self.con_ship = ships[0]
+        self.ship_dict = {}
+        for i, ship in enumerate(ships):
+            self.ship_dict[i] = ship
+        # Weapon group
+        self.wep_rack = WepRack(self.con_ship, self.ship_dict, self.player_dat, self.weapons)
+        # Sprite group
         self.ships = pg.sprite.Group()
         self.ships.add(ships)
-        self.weapons = pg.sprite.Group()
         self.explosions = pg.sprite.Group()
         # Time Management
         self.clock = pg.time.Clock()
@@ -191,6 +232,7 @@ class Game:
         # Update Game Objects and Positions
         self.manage_events()
         self.ships.update()
+        self.wep_rack.update()
         self.weapons.update()
         self.sim_gravity()
         self.check_server()
@@ -212,15 +254,31 @@ class Game:
             if event.type == pg.QUIT:
                 pg.quit()
                 sys.exit()
+            if event.type == pg.KEYUP and event.key == pg.K_t:
+                self.target_nearest_ship()
+
+
         if pg.key.get_pressed()[pg.K_ESCAPE]:
             pg.quit()
             sys.exit()
 
     def do_collisions(self):
-        pg.sprite.groupcollide(self.ships, self.weapons, True, True)  # Bullet on brick
+        pg.sprite.groupcollide(self.ships, self.weapons, False, False)  # Bullet on brick
 
     def sim_gravity(self):
         pass
+
+    def target_nearest_ship(self):
+        m_pos = np.array(pg.mouse.get_pos())
+        distances = {}
+        for ship in self.ships:
+            if ship != self.con_ship:
+                distance = np.sqrt(sum((ship.pos-m_pos)**2))
+                distances[distance] = ship
+        if distances:
+            self.con_ship.target = distances[min(distances.keys())]
+        else:
+            self.con_ship.target = m_pos
 
     def check_server(self):
         self.con_ship.up_data(self.player_dat)
@@ -229,3 +287,6 @@ class Game:
             ship.new_pos(self.player_dat)
             if ship.health <= 0:
                 ship.kill()
+        if self.player_dat.new_weapons:
+            self.wep_rack.new_weapons()
+            self.player_dat.new_weapons = []
