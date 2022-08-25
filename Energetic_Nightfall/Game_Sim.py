@@ -34,6 +34,8 @@ class Ship(pg.sprite.Sprite):
         # Combat Variables
         self.health = ship_dat[3]
         self.max = self.health
+        self.target = pg.mouse.get_pos()
+        self.target_pos = self.target
         # Movement Requirements
         self.vel = ship_dat[1].astype(float)
         self.pos = ship_dat[0].astype(float)
@@ -49,14 +51,14 @@ class Ship(pg.sprite.Sprite):
 
     def update(self):
         if self.control:
-            self.do_movement()
+            keys = pg.key.get_pressed()
+            self.do_movement(keys)
+            self.get_target(keys)
         self.og_image = self.image_list[self.state]
         self.rect.center = self.pos
         self.pos += self.vel
 
-
-    def do_movement(self):
-        keys = pg.key.get_pressed()
+    def do_movement(self, keys):
         # Rotation
         if keys[pg.K_a] and self.dtheta < .25:
             self.dtheta += self.atheta
@@ -90,6 +92,15 @@ class Ship(pg.sprite.Sprite):
         elif self.pos[1] >= 720-offset:
             self.vel[1] = 0
             self.pos[1] = 720-offset-offset/100
+
+    def get_target(self, keys):
+        if keys[pg.K_t]:
+            self.target = np.array(pg.mouse.get_pos())
+        try:
+            self.target_pos = self.target.pos
+        except AttributeError:
+            self.target_pos = self.target
+
 
     def point_retrograde(self):
         """Buggy control system needs some help"""
@@ -137,8 +148,9 @@ class WepRack:
     def __init__(self, ship):
         self.ship = ship
 
-    def check_input(self):
-        pass
+    def update(self):
+        keys = pg.key.get_pressed()
+
 
     def new_weapons(self, new_weapons: list):
         """inputs:
