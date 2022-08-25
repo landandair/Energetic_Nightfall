@@ -142,7 +142,7 @@ class Ship(pg.sprite.Sprite):
         player_data.ships_pos[self.id] = [self.pos, self.vel, self.theta, self.health, self.state, True]
 
 
-class BasicMissle(pg.sprite.Sprite):
+class BasicMissile(pg.sprite.Sprite):
     def __init__(self, launcher: Ship):
         super().__init__()
         self.og_image = pg.image.load('Assets/Ship/ShipRed.png')
@@ -160,16 +160,19 @@ class BasicMissle(pg.sprite.Sprite):
         Tool.rot(self)
 
     def get_heading(self):
-        return np.arctan2((self.target[0]-self.pos[0]), (self.target[1]-self.pos[1]))
+        return np.arctan2(-(self.target[1]-self.pos[1]), (self.target[0]-self.pos[0]))
 
     def update(self):
         self.target = self.launcher.target_pos
         self.ref = self.launcher.pos
+        self.vel += np.array((np.cos(self.theta), -np.sin(self.theta)))*.025
         self.pos += self.vel
         self.rect.center = self.pos
         self.theta = self.get_heading()
-        self.vel += np.array(np.cos(self.theta) * .1, np.sin(self.theta)*.1)
         Tool.rot(self)
+
+        if np.sqrt(sum((self.ref-self.pos)**2)) > np.sqrt(sum((self.target-self.ref)**2)):
+            self.kill()
 
 
 # Fire Control~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -179,13 +182,13 @@ class WepRack:
         self.key_dat = key_dat
         self.ship_dict = ship_dict
         self.wep_group = weapons
-        self.wep_dict = {'basic': BasicMissle}
+        self.wep_dict = {'basic': BasicMissile}
         self.cool_down = time.time()
 
     def update(self):
         keys = pg.key.get_pressed()
         if keys[pg.K_e] and (time.time() - self.cool_down) > 2:
-            self.wep_group.add(BasicMissle(self.ship))
+            self.wep_group.add(BasicMissile(self.ship))
             self.cool_down = time.time()
 
 
