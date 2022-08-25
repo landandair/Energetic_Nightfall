@@ -1,6 +1,5 @@
 import socket
 import _thread as thread
-import threading
 import pickle
 import time
 
