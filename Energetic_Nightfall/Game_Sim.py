@@ -55,8 +55,8 @@ class Ship(pg.sprite.Sprite):
             self.do_movement(keys)
             self.get_target(keys)
         self.og_image = self.image_list[self.state]
-        self.rect.center = self.pos
         self.pos += self.vel
+        self.rect.center = self.pos
 
     def do_movement(self, keys):
         # Rotation
@@ -94,12 +94,12 @@ class Ship(pg.sprite.Sprite):
             self.pos[1] = 720-offset-offset/100
 
     def get_target(self, keys):
-        if keys[pg.K_t]:
-            self.target = pg.mouse.get_pos()
         try:
             self.target_pos = self.target.pos
         except AttributeError:
             self.target_pos = self.target
+        if keys[pg.K_t]:
+            self.target_pos = pg.mouse.get_pos()
 
     def point_retrograde(self):
         """Buggy control system needs some help"""
@@ -135,11 +135,12 @@ class Ship(pg.sprite.Sprite):
             self.theta = data[2]
             self.health = data[3]
             self.state = data[4]
+            self.target_pos = data[5]
             self.image = self.image_list[self.state]
             Tool.rot(self)
 
     def up_data(self, player_data):
-        player_data.ships_pos[self.id] = [self.pos, self.vel, self.theta, self.health, self.state, True]
+        player_data.ships_pos[self.id] = [self.pos, self.vel, self.theta, self.health, self.state, self.target_pos, True]
 
 
 class BasicMissile(pg.sprite.Sprite):
@@ -196,9 +197,9 @@ class WepRack:
         """inputs:
             - [[type <str>, origin id <int>}]
         Outputs
-            - list of weapon sprites"""
+            - list of weapon sprites added to weapon group"""
         for name, origin in self.key_dat.new_weapons:
-            self.wep_dict[name](self.ship_dict[origin])
+            self.wep_group.add(self.wep_dict[name](self.ship_dict[origin]))
 
 
 # Main Game Loop~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -257,7 +258,7 @@ class Game:
             if event.type == pg.QUIT:
                 pg.quit()
                 sys.exit()
-            if event.type == pg.KEYUP and event.key == pg.K_t:
+            if event.type == pg.MOUSEBUTTONUP:
                 self.target_nearest_ship()
 
 
@@ -292,4 +293,4 @@ class Game:
                 ship.kill()
         if self.player_dat.new_weapons:
             self.wep_rack.new_weapons()
-            self.player_dat.new_weapons = []
+            self.player_dat.new_weapons = {}

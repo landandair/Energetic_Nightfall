@@ -5,7 +5,7 @@ from Networking import KeyData, Network
 SIZE = (1280, 720)
 
 def main():
-    ip = "10.4.138.145"
+    ip = "10.0.0.144"
     port = 7135
     pg.init()
     pg.font.init()

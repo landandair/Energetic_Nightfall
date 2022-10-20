@@ -14,7 +14,7 @@ def main():
     - Copy the address into the server field shown below
     - Change the port number if desired and run the script"""
     # Put server and com port here
-    server = "10.4.138.145"
+    server = "10.0.0.144"
     port = 7135
     debug = True
     # set the communication protocol
@@ -50,10 +50,10 @@ class ServerData:
         one client to the other
         contents:
             -ship_pos: {} with key (id) and values
-                [pos <vector>, vel <vector>, heading <float>, health <int>, status <str>]
-            -new_weapons: [] with contents of [type <str>, pos <vector>, vel <vector>, target <vetor> or id <int>]
+                [pos <vector>, vel <vector>, heading <float>, health <int>, state <int>, target_pos_vel]
+            -new_weapons: [] with contents of [type <str>, pos <vector>, vel <vector>, target <vetor>, condition]
             -wep_mail: {} with key (id) and values of [] with contents of [] in format
-                [type <str>, pos <vector>, vel <vector>, target <vetor> or id <int>]
+                [type <str>, pos <vector>, vel <vector>, origin ship id <int>]
             -id: int player # of the ship most recently connected by a player"""
         self.ships_pos = {}
         self.new_weapons = []

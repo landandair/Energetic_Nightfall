@@ -87,7 +87,7 @@ class KeyData:
                 [pos <vector>, vel <vector>, heading <float>, health <int>, animation state <int>, status <str>]
             -new_weapons: [] with contents of [type <str>, pos <vector>, vel <vector>, target <vetor> or id <int>]
             -id: int player # of the ship controlled by the player"""
-        # Format id: [pos vector, vel vector, health, status]
+        # Format id: [pos vector, vel vector, theta, health, state, target_pos, ready]
         self.ships_pos = {}
         self.new_weapons = []
         self.id = id
