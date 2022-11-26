@@ -144,12 +144,14 @@ class Ship(pg.sprite.Sprite):
 
 
 """
--Basic Missile
+-Basic Missile: done
 -Prox Missile
 -Rail Gun
 -Scatter Gun?
 """
 class BasicMissile(pg.sprite.Sprite):
+    """Intended to Fly in a homing manner towards the target indicated by the launcher until they reach
+    the distance to the target"""
     main_image = pg.image.load('Assets/Ship/ShipRed.png')
 
     def __init__(self, launcher: Ship):
@@ -184,7 +186,9 @@ class BasicMissile(pg.sprite.Sprite):
             self.kill()
 
 
-class ProxMissile(pg.sprite.Sprite):
+class NuclearMissile(pg.sprite.Sprite):
+    """Intended to Fly towards the target indicated by the launcher until they reach
+    the distance to the target and make a big splash on impact"""
     main_image = pg.image.load('Assets/Ship/ShipBlue.png')
 
     def __init__(self, launcher: Ship):
@@ -207,9 +211,8 @@ class ProxMissile(pg.sprite.Sprite):
         return np.arctan2(-(self.target[1]-self.pos[1]), (self.target[0]-self.pos[0]))
 
     def update(self):
-        self.target = self.launcher.target_pos
         self.ref = self.launcher.pos
-        self.vel += np.array((np.cos(self.theta), -np.sin(self.theta)))*.015
+        self.vel += np.array((np.cos(self.theta), -np.sin(self.theta)))*.03
         self.pos += self.vel
         self.rect.center = self.pos
         self.theta = self.get_heading()
@@ -225,16 +228,25 @@ class WepRack:
         self.ship = ship
         self.ship_dict = ship_dict
         self.wep_group = weapons
-        self.wep_dict = {'basic': BasicMissile}
+        self.wep_dict = {'basic': BasicMissile, 'nuke': NuclearMissile, 'rail': BasicMissile}
         self.cool_down = time.time()
+        self.wep_choice = 'basic'
+        self.cool_down_times = {'basic': 2, 'nuke': 3, 'rail': 3}
 
     def update(self, new_weapons):
         keys = pg.key.get_pressed()
-        if keys[pg.K_e] and (time.time() - self.cool_down) > 2:
-            weapon = BasicMissile(self.ship)
+        if keys[pg.K_1]:
+            self.wep_choice = 'basic'
+        elif keys[pg.K_2]:
+            self.wep_choice = 'nuke'
+        elif keys[pg.K_3]:
+            self.wep_choice = 'rail'
+
+        if keys[pg.K_e] and (time.time() - self.cool_down) > self.cool_down_times[self.wep_choice]:
+            weapon = self.wep_dict[self.wep_choice](self.ship)
             self.wep_group.add(weapon)
             self.cool_down = time.time()
-            new_weapons.append(['basic', self.ship.id])
+            new_weapons.append([self.wep_choice, self.ship.id])
         return new_weapons
 
     def new_weapons(self, new_weps):
@@ -288,6 +300,7 @@ class Game:
         self.do_collisions()
         # Draw Everything
         self.background.draw(self.screen)
+        self.draw_target_lines()
         self.planets.draw(self.screen)
         self.ships.draw(self.screen)
         self.weapons.draw(self.screen)
@@ -316,6 +329,19 @@ class Game:
     def sim_gravity(self):
         """Add later when adding planet gravity physics"""
         pass
+
+    def draw_target_lines(self):
+        """Intended to show the player what their ship is currently targeting and if it is projectile
+        based(rail gun) how that changes things"""
+        target_color = (100, 0, 0)
+        if self.wep_rack.wep_choice == 'rail':
+            target = np.array((np.cos(self.con_ship.theta), -np.sin(self.con_ship.theta))) * 2*self.screen.get_width()
+            pg.draw.aaline(self.screen, target_color, self.con_ship.pos, self.con_ship.pos+target, 6)
+            return
+        elif self.wep_rack.wep_choice == 'basic' or self.wep_rack.wep_choice == 'nuke':
+            distance = np.sqrt(sum((self.con_ship.pos-self.con_ship.target_pos)**2))
+            pg.draw.circle(self.screen, target_color,  self.con_ship.pos, distance, 2)
+        pg.draw.aaline(self.screen, target_color, self.con_ship.pos, self.con_ship.target_pos, 3)
 
     def target_nearest_ship(self):
         m_pos = np.array(pg.mouse.get_pos())
