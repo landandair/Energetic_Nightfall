@@ -143,10 +143,53 @@ class Ship(pg.sprite.Sprite):
         player_data.ships_pos[self.id] = [self.pos, self.vel, self.theta, self.health, self.state, self.target_pos, True]
 
 
+"""
+-Basic Missile
+-Prox Missile
+-Rail Gun
+-Scatter Gun?
+"""
 class BasicMissile(pg.sprite.Sprite):
+    main_image = pg.image.load('Assets/Ship/ShipRed.png')
+
     def __init__(self, launcher: Ship):
         super().__init__()
-        self.og_image = pg.image.load('Assets/Ship/ShipRed.png')
+        self.og_image = self.main_image
+        self.image = self.og_image  # Set initial image
+        self.rect = self.image.get_rect()
+        # Combat Variables
+        self.launcher = launcher
+        self.target = launcher.target_pos
+        self.ref = launcher.pos
+        # Movement Requirements
+        self.vel = np.array(launcher.vel)
+        self.pos = np.array(launcher.pos)
+        self.rect.center = self.pos  # Set position
+        self.theta = self.get_heading()
+        Tool.rot(self)
+
+    def get_heading(self):
+        return np.arctan2(-(self.target[1]-self.pos[1]), (self.target[0]-self.pos[0]))
+
+    def update(self):
+        self.target = self.launcher.target_pos
+        self.ref = self.launcher.pos
+        self.vel += np.array((np.cos(self.theta), -np.sin(self.theta)))*.015
+        self.pos += self.vel
+        self.rect.center = self.pos
+        self.theta = self.get_heading()
+        Tool.rot(self)
+
+        if np.sqrt(sum((self.ref-self.pos)**2)) > np.sqrt(sum((self.target-self.ref)**2)):
+            self.kill()
+
+
+class ProxMissile(pg.sprite.Sprite):
+    main_image = pg.image.load('Assets/Ship/ShipBlue.png')
+
+    def __init__(self, launcher: Ship):
+        super().__init__()
+        self.og_image = self.main_image
         self.image = self.og_image  # Set initial image
         self.rect = self.image.get_rect()
         # Combat Variables
@@ -178,27 +221,28 @@ class BasicMissile(pg.sprite.Sprite):
 
 # Fire Control~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class WepRack:
-    def __init__(self, ship: Ship, ship_dict: dict, key_dat: Tool.KeyData, weapons: pg.sprite.Group):
+    def __init__(self, ship: Ship, ship_dict: dict, weapons: pg.sprite.Group):
         self.ship = ship
-        self.key_dat = key_dat
         self.ship_dict = ship_dict
         self.wep_group = weapons
         self.wep_dict = {'basic': BasicMissile}
         self.cool_down = time.time()
 
-    def update(self):
+    def update(self, new_weapons):
         keys = pg.key.get_pressed()
         if keys[pg.K_e] and (time.time() - self.cool_down) > 2:
-            self.wep_group.add(BasicMissile(self.ship))
+            weapon = BasicMissile(self.ship)
+            self.wep_group.add(weapon)
             self.cool_down = time.time()
+            new_weapons.append(['basic', self.ship.id])
+        return new_weapons
 
-
-    def new_weapons(self):
+    def new_weapons(self, new_weps):
         """inputs:
-            - [[type <str>, origin id <int>}]
+            - new_weps: [type <str>, origin id <int>]
         Outputs
             - list of weapon sprites added to weapon group"""
-        for name, origin in self.key_dat.new_weapons:
+        for name, origin in new_weps:
             self.wep_group.add(self.wep_dict[name](self.ship_dict[origin]))
 
 
@@ -223,7 +267,7 @@ class Game:
         for i, ship in enumerate(ships):
             self.ship_dict[i] = ship
         # Weapon group
-        self.wep_rack = WepRack(self.con_ship, self.ship_dict, self.player_dat, self.weapons)
+        self.wep_rack = WepRack(self.con_ship, self.ship_dict, self.weapons)
         # Sprite group
         self.ships = pg.sprite.Group()
         self.ships.add(ships)
@@ -236,7 +280,7 @@ class Game:
         # Update Game Objects and Positions
         self.manage_events()
         self.ships.update()
-        self.wep_rack.update()
+        self.player_dat.new_weapons = self.wep_rack.update(self.player_dat.new_weapons)
         self.weapons.update()
         self.sim_gravity()
         self.check_server()
@@ -270,6 +314,7 @@ class Game:
         pg.sprite.groupcollide(self.ships, self.weapons, False, False)  # Bullet on brick
 
     def sim_gravity(self):
+        """Add later when adding planet gravity physics"""
         pass
 
     def target_nearest_ship(self):
@@ -292,5 +337,5 @@ class Game:
             if ship.health <= 0:
                 ship.kill()
         if self.player_dat.new_weapons:
-            self.wep_rack.new_weapons()
-            self.player_dat.new_weapons = {}
+            self.wep_rack.new_weapons(self.player_dat.new_weapons)
+            self.player_dat.new_weapons = []

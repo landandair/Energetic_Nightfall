@@ -84,8 +84,8 @@ class KeyData:
         """Class which holds all of the data that is needed to be sent across and back acrooss the network to
         facilitate multiplayer play
             -ship_pos: {} with key (id) and data
-                [pos <vector>, vel <vector>, heading <float>, health <int>, animation state <int>, status <str>]
-            -new_weapons: [] with contents of [type <str>, pos <vector>, vel <vector>, target <vetor> or id <int>]
+                [pos <vector>, vel <vector>, heading <float>, health <int>, animation state <int>, target<vector>, status <str>]
+            -new_weapons: [] with contents of [type <str>, launcher <int>]
             -id: int player # of the ship controlled by the player"""
         # Format id: [pos vector, vel vector, theta, health, state, target_pos, ready]
         self.ships_pos = {}

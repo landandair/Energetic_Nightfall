@@ -82,7 +82,8 @@ def threaded_client(conn, player):
     if player in Server_data.ships_pos.keys():
         initial = {player: Server_data.ships_pos[player]}
     else:
-        initial = {player: [np.array((200, 100)), np.array((0, 0)), 0, 100, False]}
+        # pos <vector>, vel <vector>, heading <float>, health <int>, animation state <int>, target<vector>, status <str>
+        initial = {player: [np.array((200, 100)), np.array((0, 0)), 0., 100, 0, (0, 0), False]}
     conn.send(pickle.dumps(initial, protocol=-1))
     Server_data.wep_mail[player] = []
     while True:
@@ -113,6 +114,7 @@ def threaded_client(conn, player):
     #Server_data.wep_mail.pop(player)
     #Server_data.ships_pos.pop(player)  # Removes disconnected player from memory
     print(f"Lost connection to player:{player}")
+    print(Server_data.wep_mail)
     conn.close()
 
 
