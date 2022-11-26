@@ -53,7 +53,7 @@ class ServerData:
                 [pos <vector>, vel <vector>, heading <float>, health <int>, state <int>, target_pos_vel]
             -new_weapons: [] with contents of [type <str>, pos <vector>, vel <vector>, target <vetor>, condition]
             -wep_mail: {} with key (id) and values of [] with contents of [] in format
-                [type <str>, pos <vector>, vel <vector>, origin ship id <int>]
+                [type <str>, LauncherID <int>]
             -id: int player # of the ship most recently connected by a player"""
         self.ships_pos = {}
         self.new_weapons = []
@@ -66,7 +66,7 @@ class ServerData:
         inputs:
             - id <int>: player key who fired the weapons
             - weapons [list]: contains lists of format
-            [type <str>, pos <vector>, vel <vector>, target <vetor> or id <int>]"""
+            [type <str>, LauncherID <int>]"""
         for ship in self.ships_pos.keys():
             if ship not in self.wep_mail.keys():
                 self.wep_mail[ship] = []
