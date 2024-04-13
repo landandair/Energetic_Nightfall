@@ -1,0 +1,43 @@
+[gd_scene load_steps=6 format=3 uid="uid://d3hw8lkupmid1"]
+
+[ext_resource type="Texture2D" uid="uid://fwaset0bfxpm" path="res://Assets/ship/ShipRed.png" id="1_e4gjc"]
+[ext_resource type="Texture2D" uid="uid://dnsuj8yialaq3" path="res://Assets/ship/ThrustBkw.png" id="2_1bovd"]
+[ext_resource type="Texture2D" uid="uid://dt80fy3bvqdeg" path="res://Assets/ship/ThrustFwd.png" id="3_nd34p"]
+[ext_resource type="Texture2D" uid="uid://cw1cyng6nuict" path="res://Assets/ship/color_mask.png" id="4_x4gdn"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_5ppet"]
+radius = 6.4
+height = 24.6
+
+[node name="Ship" type="CharacterBody2D"]
+scale = Vector2(10, 10)
+motion_mode = 1
+wall_min_slide_angle = 3.14159
+
+[node name="base_structure" type="Sprite2D" parent="."]
+texture = ExtResource("1_e4gjc")
+
+[node name="ThrustBkw" type="Sprite2D" parent="base_structure"]
+visible = false
+position = Vector2(1, 0)
+scale = Vector2(1, 1)
+texture = ExtResource("2_1bovd")
+
+[node name="ThrustFwd" type="Sprite2D" parent="base_structure"]
+visible = false
+scale = Vector2(1, 1)
+texture = ExtResource("3_nd34p")
+
+[node name="color_overlay" type="Sprite2D" parent="base_structure"]
+modulate = Color(1, 0, 0, 1)
+scale = Vector2(1, 1)
+texture = ExtResource("4_x4gdn")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+rotation = 1.5708
+shape = SubResource("CapsuleShape2D_5ppet")
+
+[node name="Server_Syncronizer" type="MultiplayerSynchronizer" parent="."]
+
+[node name="Player_Input" type="MultiplayerSynchronizer" parent="."]
+root_path = NodePath(".")

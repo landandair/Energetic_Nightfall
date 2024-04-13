@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3 uid="uid://1jp2q00tk77r"]
+
+[ext_resource type="Texture2D" uid="uid://rg8050v20mcx" path="res://Assets/Background1.png" id="1_r1e0v"]
+[ext_resource type="PackedScene" uid="uid://d3hw8lkupmid1" path="res://Scenes/Ship.tscn" id="2_msnlp"]
+
+[node name="world_base" type="Node2D"]
+
+[node name="Background" type="Sprite2D" parent="."]
+z_index = -1
+scale = Vector2(0.623148, 0.623148)
+texture = ExtResource("1_r1e0v")
+centered = false
+
+[node name="MultiplayerSpawner" type="MultiplayerSpawner" parent="."]
+spawn_path = NodePath("../players")
+
+[node name="players" type="Node2D" parent="."]
+
+[node name="Ship" parent="." instance=ExtResource("2_msnlp")]
+position = Vector2(431, 326)
